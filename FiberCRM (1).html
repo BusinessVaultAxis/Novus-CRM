@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fiber CRM — BeyondPro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0C0C0C; --s1:#111; --s2:#181818; --s3:#202020;
+  --b:#222; --b2:#2e2e2e; --b3:#3a3a3a;
+  --gold:#C9A84C; --gold2:rgba(201,168,76,.12);
+  --text:#EBEBEB; --dim:#888; --muted:#444;
+  --green:#4e9c65; --blue:#4a85b8; --red:#b84a4a; --orange:#b87d4a;
+  --radius:8px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;font-size:13px;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+/* ─── SIDEBAR ─── */
+#sb{width:240px;min-height:100vh;background:var(--s1);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sb-head{padding:18px 16px 14px;border-bottom:1px solid var(--b);}
+.sb-brand{font-size:9px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;font-weight:700;}
+.sb-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* goal */
+.goal{padding:14px 16px;border-bottom:1px solid var(--b);}
+.goal-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.goal-lbl{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.11em;font-weight:600;}
+.goal-pct{font-size:11px;color:var(--muted);}
+.gbar{height:3px;background:var(--b2);border-radius:2px;margin-bottom:8px;overflow:hidden;}
+.gfill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s;}
+.goal-nums{display:flex;justify-content:space-between;align-items:baseline;}
+.goal-earned{font-size:20px;font-weight:600;}
+.goal-rem{font-size:11px;color:var(--muted);}
+.goal-note{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* stat row */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 16px;border-bottom:1px solid var(--b);}
+.stat{background:var(--s2);border-radius:7px;padding:9px 10px;}
+.stat-l{font-size:9px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.stat-v{font-size:18px;font-weight:600;line-height:1;}
+
+/* commission */
+.comm{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;}
+.comm-l{font-size:11px;color:var(--dim);}
+.comm-r{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);}
+.comm-r input{width:62px;padding:3px 7px;background:var(--bg);border:1px solid var(--b);border-radius:5px;color:var(--text);font-size:12px;text-align:right;}
+.comm-r input:focus{outline:none;}
+
+/* fastgem sync */
+.fg-sync{padding:12px 16px;border-bottom:1px solid var(--b);}
+.fg-lbl{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.11em;font-weight:600;margin-bottom:9px;}
+.fg-in{width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--b);border-radius:6px;color:var(--text);font-size:12px;margin-bottom:6px;}
+.fg-in:focus{outline:none;border-color:var(--b3);}
+.fg-in::placeholder{color:var(--muted);}
+.fg-status{font-size:11px;min-height:15px;margin-top:6px;line-height:1.4;}
+.fg-status.ok{color:var(--green);}
+.fg-status.err{color:var(--red);}
+.fg-status.spin{color:var(--gold);}
+.conn-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.conn-dot{font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px;}
+.conn-dot::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;}
+.last-sync{font-size:10px;color:var(--muted);margin-bottom:8px;}
+
+/* sidebar buttons */
+.sb-btns{padding:14px 16px;display:flex;flex-direction:column;gap:7px;margin-top:auto;border-top:1px solid var(--b);}
+.btn{padding:8px 13px;border-radius:var(--radius);font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;border:none;transition:opacity .15s;cursor:pointer;}
+.btn-gold{background:transparent;border:1px solid var(--gold);color:var(--gold);}
+.btn-gold:hover{background:var(--gold2);}
+.btn-ghost{background:transparent;border:1px solid var(--b2);color:var(--dim);}
+.btn-ghost:hover{border-color:var(--b3);color:var(--text);}
+.btn-blue{background:transparent;border:1px solid #3a6080;color:#6aabdb;}
+.btn-blue:hover{background:rgba(74,133,184,.08);}
+.btn-red{background:transparent;border:1px solid var(--red);color:var(--red);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-xs{padding:3px 8px;font-size:10px;}
+
+/* ─── MAIN ─── */
+#main{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow:hidden;}
+.topbar{height:3px;background:var(--b);}
+.topfill{height:100%;background:var(--gold);transition:width .5s;}
+.tabs{display:flex;border-bottom:1px solid var(--b);background:var(--s1);padding:0 20px;gap:4px;}
+.tab{padding:10px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;}
+.tab:hover{color:var(--dim);}
+.tab.active{border-bottom-color:var(--gold);color:var(--gold);font-weight:500;}
+#content{flex:1;overflow-y:auto;padding:20px 24px;}
+
+/* ─── TABLE LAYOUT ─── */
+.tbl-header{display:grid;padding:0 12px 6px;border-bottom:1px solid var(--b);margin-bottom:2px;}
+.tbl-header span{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:500;}
+.tbl-row{display:grid;padding:10px 12px;border-radius:7px;cursor:pointer;align-items:center;border:1px solid transparent;margin-bottom:2px;transition:background .1s,border-color .1s;}
+.tbl-row:hover{background:var(--s2);border-color:var(--b);}
+.tbl-row.today{border-left:2px solid var(--gold);padding-left:10px;}
+.tbl-row.overdue{border-left:2px solid var(--red);padding-left:10px;}
+.col-name{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.col-phone{font-size:12px;color:var(--dim);}
+.col-date{font-size:12px;}
+.col-status{}
+.col-extra{font-size:11px;color:var(--muted);text-align:right;}
+.fgtag{font-size:9px;color:var(--blue);background:rgba(74,133,184,.12);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;}
+
+/* ─── SECTION HEADERS ─── */
+.sec{margin-bottom:20px;}
+.sec-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--b);}
+.sec-title{font-size:13px;font-weight:600;letter-spacing:.02em;}
+.sec-count{font-size:11px;color:var(--muted);}
+.sec-note{font-size:11px;color:var(--muted);margin-left:auto;}
+.empty{padding:28px 0;text-align:center;color:var(--muted);font-size:12px;}
+
+/* ─── BADGES ─── */
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;}
+.bdg::before{content:'';width:5px;height:5px;border-radius:50%;}
+.s-Pitched    {color:#777;background:rgba(120,120,120,.1);} .s-Pitched::before{background:#666;}
+.s-Signed     {color:var(--green);background:rgba(78,156,101,.1);} .s-Signed::before{background:var(--green);}
+.s-Scheduled  {color:var(--gold);background:var(--gold2);} .s-Scheduled::before{background:var(--gold);}
+.s-Rescheduled{color:var(--orange);background:rgba(184,125,74,.1);} .s-Rescheduled::before{background:var(--orange);}
+.s-Installed  {color:var(--blue);background:rgba(74,133,184,.1);} .s-Installed::before{background:var(--blue);}
+.s-Cancelled  {color:var(--red);background:rgba(184,74,74,.1);} .s-Cancelled::before{background:var(--red);}
+.s-Lost       {color:var(--red);background:rgba(184,74,74,.1);} .s-Lost::before{background:var(--red);}
+
+/* ─── OVERVIEW CARDS ─── */
+.ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.ov-card{background:var(--s1);border:1px solid var(--b);border-radius:10px;padding:14px 16px;}
+.ov-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.ov-val{font-size:24px;font-weight:600;line-height:1;}
+.ov-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.ov-card.highlight{border-color:rgba(201,168,76,.35);}
+
+.today-list{margin-bottom:20px;}
+.today-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--s1);border:1px solid rgba(201,168,76,.2);border-radius:8px;margin-bottom:6px;}
+.ti-left .ti-name{font-size:13px;font-weight:500;}
+.ti-left .ti-addr{font-size:11px;color:var(--muted);margin-top:2px;}
+.ti-right{text-align:right;}
+.ti-right .ti-ph{font-size:12px;color:var(--gold);}
+.ti-right .ti-st{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.attention-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--s1);border:1px solid var(--b);border-radius:7px;margin-bottom:5px;cursor:pointer;}
+.attention-item:hover{border-color:var(--b2);}
+.ai-name{font-size:13px;font-weight:500;}
+.ai-addr{font-size:11px;color:var(--muted);margin-top:1px;}
+.ai-right{text-align:right;}
+.ai-days{font-size:12px;font-weight:500;}
+.ai-signed{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* ─── MODAL ─── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:#161616;border:1px solid var(--b2);border-radius:12px;width:100%;max-width:460px;max-height:88vh;overflow-y:auto;padding:22px;}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.mtitle{font-size:14px;font-weight:600;}
+.mclose{background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:2px;}
+.mclose:hover{color:var(--text);}
+.fg-form{margin-bottom:12px;}
+.fg-form label{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.fg-form input,.fg-form select,.fg-form textarea{width:100%;padding:8px 9px;background:var(--bg);border:1px solid var(--b2);border-radius:6px;color:var(--text);font-size:13px;}
+.fg-form input:focus,.fg-form select:focus,.fg-form textarea:focus{outline:none;border-color:var(--b3);}
+.fg-form textarea{min-height:64px;resize:vertical;}
+.fg-form select option{background:#161616;}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.chk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);cursor:pointer;margin-bottom:12px;}
+.mbtns{display:flex;gap:7px;margin-top:4px;}
+
+/* detail panel */
+.dp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--b);font-size:13px;}
+.dp-row:last-child{border:none;}
+.dp-k{color:var(--muted);}
+.dp-note{background:var(--bg);border-radius:6px;padding:9px 11px;font-size:12px;color:var(--dim);line-height:1.6;margin:10px 0;white-space:pre-wrap;}
+.dp-fup{font-size:12px;color:var(--gold);margin:8px 0 12px;}
+
+/* CSV */
+.csv-ta{font-family:monospace;font-size:11px;min-height:100px;width:100%;padding:10px;background:var(--bg);border:1px solid var(--b2);border-radius:6px;color:var(--dim);resize:vertical;}
+.csv-ta:focus{outline:none;}
+.import-hint{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.prev-list{max-height:200px;overflow-y:auto;margin-bottom:10px;}
+.prev-item{background:var(--s2);border-radius:6px;padding:8px 11px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
+.err{font-size:11px;color:var(--red);margin-top:5px;}
+
+/* cors help */
+.cors-box{background:rgba(184,74,74,.07);border:1px solid rgba(184,74,74,.2);border-radius:7px;padding:12px;font-size:11px;color:var(--dim);line-height:1.7;margin-top:8px;}
+.cors-box code{background:var(--bg);padding:1px 5px;border-radius:3px;font-family:monospace;color:var(--text);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="sb-head">
+    <div class="sb-brand">Fiber CRM</div>
+    <div class="sb-sub">BeyondPro</div>
+  </div>
+
+  <div class="goal">
+    <div class="goal-top">
+      <span class="goal-lbl">$100k Goal</span>
+      <span class="goal-pct" id="gp">0%</span>
+    </div>
+    <div class="gbar"><div class="gfill" id="gf" style="width:0"></div></div>
+    <div class="goal-nums">
+      <span class="goal-earned" id="ge">$0</span>
+      <span class="goal-rem" id="gr">$100k left</span>
+    </div>
+    <div class="goal-note" id="gn"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-l">Work Orders</div><div class="stat-v" id="st-wo">0</div></div>
+    <div class="stat"><div class="stat-l">Leads</div><div class="stat-v" id="st-le">0</div></div>
+    <div class="stat"><div class="stat-l">Installed</div><div class="stat-v" id="st-in">0</div></div>
+    <div class="stat"><div class="stat-l">Earned</div><div class="stat-v" id="st-ea" style="font-size:14px;padding-top:2px">$0</div></div>
+  </div>
+
+  <div class="comm">
+    <span class="comm-l">Per install</span>
+    <div class="comm-r"><span>$</span><input type="number" id="comm" min="0" value="150"></div>
+  </div>
+
+  <div class="fg-sync">
+    <div class="fg-lbl">FastGem Sync</div>
+    <div id="fg-form">
+      <input class="fg-in" type="text" id="fg-u" placeholder="FastGem email / username">
+      <input class="fg-in" type="password" id="fg-p" placeholder="Password">
+      <button class="btn btn-blue" id="btn-connect" style="width:100%">Connect FastGem</button>
+      <div class="fg-status" id="fg-s"></div>
+    </div>
+    <div id="fg-conn" style="display:none">
+      <div class="conn-row">
+        <span class="conn-dot">Connected</span>
+        <button class="btn btn-xs btn-ghost" id="btn-disc">Disconnect</button>
+      </div>
+      <div class="last-sync" id="fg-ls">Never synced</div>
+      <button class="btn btn-blue" id="btn-sync" style="width:100%">↻ Sync Now</button>
+      <div class="fg-status" id="fg-s2"></div>
+    </div>
+  </div>
+
+  <div class="sb-btns">
+    <button class="btn btn-ghost btn-sm" id="btn-csv">↑ Import CSV</button>
+    <button class="btn btn-gold" id="btn-add">+ Add Lead</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar"><div class="topfill" id="tf" style="width:0"></div></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="workorders">Work Orders</button>
+    <button class="tab" data-tab="leads">Leads</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="ov-add">
+  <div class="modal">
+    <div class="mhdr"><span class="mtitle" id="add-t">New Lead</span><button class="mclose" data-close="ov-add">×</button></div>
+    <div class="fg-form"><label>Name</label><input id="f-name" placeholder="Customer full name"></div>
+    <div class="fg-form"><label>Address</label><input id="f-addr" placeholder="Street address"></div>
+    <div class="frow2">
+      <div class="fg-form"><label>Phone</label><input id="f-phone" type="tel" placeholder="Phone"></div>
+      <div class="fg-form"><label>Email</label><input id="f-email" type="email" placeholder="Email"></div>
+    </div>
+    <div class="fg-form"><label>FastGem ID</label><input id="f-cid" placeholder="Submission ID"></div>
+    <div class="fg-form"><label>Status</label>
+      <select id="f-status">
+        <option>Pitched</option><option>Signed</option><option>Scheduled</option>
+        <option>Rescheduled</option><option>Installed</option><option>Cancelled</option><option>Lost</option>
+      </select>
+    </div>
+    <div class="frow2">
+      <div class="fg-form"><label>Date Signed</label><input id="f-signed" type="date"></div>
+      <div class="fg-form"><label>Install Date</label><input id="f-install" type="date"></div>
+    </div>
+    <div class="fg-form"><label>Notes</label><textarea id="f-notes" placeholder="Notes..."></textarea></div>
+    <label class="chk"><input type="checkbox" id="f-fu"> Flag for follow-up</label>
+    <div class="mbtns">
+      <button class="btn btn-ghost" style="flex:1" data-close="ov-add">Cancel</button>
+      <button class="btn btn-gold" style="flex:2" id="btn-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="ov-detail">
+  <div class="modal">
+    <div class="mhdr">
+      <div>
+        <div class="mtitle" id="d-name">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px" id="d-addr">—</div>
+      </div>
+      <button class="mclose" data-close="ov-detail">×</button>
+    </div>
+    <div id="d-body"></div>
+    <div class="mbtns" style="margin-top:14px">
+      <button class="btn btn-red btn-sm" id="btn-del">Delete</button>
+      <button class="btn btn-ghost" style="flex:1" data-close="ov-detail">Close</button>
+      <button class="btn btn-gold" style="flex:2" id="btn-edit">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- CSV MODAL -->
+<div class="overlay" id="ov-csv">
+  <div class="modal">
+    <div class="mhdr"><span class="mtitle">Import CSV</span><button class="mclose" data-close="ov-csv">×</button></div>
+    <div id="csv-body">
+      <div class="import-hint">Export from FastGem (<strong style="color:#ccc">Leads → Export</strong>) then paste the CSV below.</div>
+      <textarea class="csv-ta" id="csv-ta" placeholder="Paste CSV here..."></textarea>
+      <div class="err" id="csv-err" style="display:none"></div>
+      <div class="mbtns" style="margin-top:10px">
+        <button class="btn btn-ghost" style="flex:1" data-close="ov-csv">Cancel</button>
+        <button class="btn btn-gold" style="flex:2" id="btn-parse">Preview</button>
+      </div>
+    </div>
+    <div id="csv-prev" style="display:none">
+      <div id="prev-ct" style="font-size:12px;color:var(--dim);margin-bottom:9px"></div>
+      <div class="prev-list" id="prev-list"></div>
+      <div class="mbtns">
+        <button class="btn btn-ghost" style="flex:1" id="btn-csvback">Back</button>
+        <button class="btn btn-gold" style="flex:2" id="btn-import">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GOAL = 100000;
+const BASE = 'https://bp.fastgem.net/fast-api/v1';
+const STATS_ALL = ['Pitched','Signed','Scheduled','Rescheduled','Installed','Cancelled','Lost'];
+
+let leads    = JSON.parse(localStorage.getItem('fcrm3-leads')    || '[]');
+let settings = JSON.parse(localStorage.getItem('fcrm3-settings') || '{"commission":150}');
+let fgAuth   = JSON.parse(localStorage.getItem('fcrm3-auth')     || 'null');
+
+let activeTab = 'overview';
+let detailId  = null;
+let editId    = null;
+let csvPrev   = [];
+
+// ── UTILS ──
+const save = () => {
+  localStorage.setItem('fcrm3-leads',    JSON.stringify(leads));
+  localStorage.setItem('fcrm3-settings', JSON.stringify(settings));
+  localStorage.setItem('fcrm3-auth',     JSON.stringify(fgAuth));
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+const fmtDate = d => {
+  if (!d) return '—';
+  const dt = new Date(d + 'T12:00:00');
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'2-digit'});
+};
+
+const daysFrom = d => {
+  if (!d) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((new Date(d + 'T12:00:00') - now) / 864e5);
+};
+
+const daysSince = d => {
+  if (!d) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((now - new Date(d + 'T12:00:00')) / 864e5);
+};
+
+const badge = s => `<span class="bdg s-${s}">${s}</span>`;
+
+// Work Order = has an install date (actively scheduled/installed/rescheduled)
+const isWorkOrder = l => !!l.installDate;
+
+// ── STATUS MAP ──
+const mapStatus = raw => {
+  const s = (raw || '').toUpperCase().trim();
+  if (!s) return 'Pitched';
+  if (s.includes('RESCHEDUL')) return 'Rescheduled';
+  if (s.includes('COMPLET') || s === 'INSTALLED' || (s.includes('INSTALL') && s.includes('DONE'))) return 'Installed';
+  if (s.includes('INSTALL') || s.includes('SCHEDUL') || s.includes('PENDING INSTALL') || s.includes('DISPATCH')) return 'Scheduled';
+  if (s.includes('SIGNED') || s.includes('APPROVED') || s.includes('SOLD') || s.includes('CONTRACT') || s.includes('PASS')) return 'Signed';
+  if (s.includes('CANCEL')) return 'Cancelled';
+  if (s.includes('LOST') || s.includes('DECLINE') || s.includes('FAIL') || s.includes('NO SALE') || s.includes('REFUSED')) return 'Lost';
+  return 'Pitched';
+};
+
+// ── MAP FASTGEM SUBMISSION → LEAD ──
+const mapSub = sub => {
+  const name = [sub.first_name, sub.last_name].filter(Boolean).join(' ').trim() || sub.business_name || '';
+  const addrParts = [sub.address, sub.city, sub.us_state, sub.zipcode].filter(Boolean);
+  return {
+    name, address: addrParts.join(', '),
+    phone: sub.primary_phone || sub.secondary_phone || '',
+    email: sub.email || '',
+    contractId: String(sub.id || ''), fgId: String(sub.id || ''),
+    status: mapStatus(sub.status), fgStatus: sub.status || '',
+    signedDate: (sub.created || '').split(' ')[0],
+    installDate: '',
+    notes: sub.follow_up_details || '',
+    followUp: !!(sub.follow_up_details),
+  };
+};
+
+// ── FASTGEM API ──
+async function fgFetch(path, opts = {}) {
+  const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+  if (fgAuth?.token) headers['Authorization'] = 'Bearer ' + fgAuth.token;
+  const res = await fetch(BASE + path, { ...opts, headers });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const j = await res.json();
+  if (!j.success) throw new Error(j.message || 'FastGem error');
+  return j.data;
+}
+
+async function connectFG() {
+  const u = document.getElementById('fg-u').value.trim();
+  const p = document.getElementById('fg-p').value.trim();
+  if (!u || !p) { fgStatus('Enter credentials', 'err'); return; }
+  fgStatus('Connecting…', 'spin');
+  document.getElementById('btn-connect').disabled = true;
+  try {
+    const d = await fgFetch('/authenticate', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    fgAuth = { token: d.token, email: d.email, connectedAt: new Date().toISOString() };
+    save(); showConnected();
+    fgStatus2('Connected — ready to sync', 'ok');
+  } catch(e) {
+    document.getElementById('btn-connect').disabled = false;
+    if (e.message.includes('fetch') || e.message.includes('CORS') || e.message.includes('Network')) {
+      document.getElementById('fg-s').innerHTML = corsMsg();
+    } else {
+      fgStatus('Login failed: ' + e.message, 'err');
+    }
+  }
+}
+
+async function syncFG() {
+  fgStatus2('Fetching submissions…', 'spin');
+  document.getElementById('btn-sync').disabled = true;
+  try {
+    let all = [], offset = 0;
+    while (true) {
+      const page = await fgFetch(`/submissions?list[limitstart]=${offset}`);
+      const rows = Array.isArray(page) ? page : [];
+      all = all.concat(rows);
+      if (rows.length < 250) break;
+      offset += 250;
+    }
+    let added = 0, updated = 0;
+    all.forEach(sub => {
+      const mapped = mapSub(sub);
+      const fgId   = String(sub.id);
+      const exist  = leads.find(l => l.fgId === fgId || l.contractId === fgId);
+      if (exist) {
+        // Preserve local install date, notes, followUp — update everything else from FG
+        Object.assign(exist, {
+          name: mapped.name || exist.name,
+          address: mapped.address || exist.address,
+          phone: mapped.phone || exist.phone,
+          email: mapped.email || exist.email,
+          status: mapStatus(sub.status),
+          signedDate: mapped.signedDate || exist.signedDate,
+          fgStatus: mapped.fgStatus, fgId, contractId: fgId,
+        });
+        updated++;
+      } else {
+        leads.unshift({ ...mapped, id: uid(), createdAt: new Date().toISOString() });
+        added++;
+      }
+    });
+    fgAuth.lastSync = new Date().toISOString();
+    save(); render();
+    document.getElementById('btn-sync').disabled = false;
+    fgStatus2(`✓ ${added} new · ${updated} updated`, 'ok');
+    updateLastSync();
+  } catch(e) {
+    document.getElementById('btn-sync').disabled = false;
+    if (e.message.includes('fetch') || e.message.includes('Network')) {
+      document.getElementById('fg-s2').innerHTML = corsMsg();
+    } else if (e.message.includes('401') || e.message.includes('403')) {
+      fgStatus2('Session expired — reconnect', 'err');
+    } else {
+      fgStatus2('Sync failed: ' + e.message, 'err');
+    }
+  }
+}
+
+const corsMsg = () => `<div class="cors-box"><strong style="color:var(--red)">Browser blocked the connection (CORS).</strong><br>
+Open Terminal and run:<br><code>cd ~/Downloads && python3 -m http.server 8765</code><br>
+Then go to: <code>http://localhost:8765/FiberCRM.html</code></div>`;
+
+const fgStatus  = (m, c) => { const el=document.getElementById('fg-s');  el.className='fg-status '+(c||''); el.textContent=m; };
+const fgStatus2 = (m, c) => { const el=document.getElementById('fg-s2'); el.className='fg-status '+(c||''); el.textContent=m; };
+
+function showConnected() {
+  document.getElementById('fg-form').style.display = 'none';
+  document.getElementById('fg-conn').style.display = 'block';
+  updateLastSync();
+}
+function updateLastSync() {
+  if (!fgAuth) return;
+  document.getElementById('fg-ls').textContent = fgAuth.lastSync
+    ? 'Last sync: ' + new Date(fgAuth.lastSync).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
+    : 'Never synced';
+}
+function disconnectFG() {
+  fgAuth = null; save();
+  document.getElementById('fg-form').style.display = 'block';
+  document.getElementById('fg-conn').style.display = 'none';
+  document.getElementById('fg-u').value = '';
+  document.getElementById('fg-p').value = '';
+  fgStatus('', '');
+}
+
+// ── SIDEBAR UPDATE ──
+function updateSidebar() {
+  const inst   = leads.filter(l => l.status === 'Installed');
+  const earned = inst.length * settings.commission;
+  const pct    = Math.min(100, earned / GOAL * 100);
+  const rem    = Math.max(0, GOAL - earned);
+  const need   = rem > 0 ? Math.ceil(rem / settings.commission) : 0;
+  const wos    = leads.filter(isWorkOrder).length;
+  const lonly  = leads.filter(l => !isWorkOrder(l)).length;
+
+  document.getElementById('gp').textContent  = pct.toFixed(1) + '%';
+  document.getElementById('gf').style.width  = pct + '%';
+  document.getElementById('tf').style.width  = pct + '%';
+  document.getElementById('ge').textContent  = '$' + earned.toLocaleString();
+  document.getElementById('gr').textContent  = '$' + rem.toLocaleString() + ' left';
+  document.getElementById('gn').textContent  = need > 0 ? need + ' install' + (need!==1?'s':'') + ' to goal' : earned >= GOAL ? '🎯 Goal reached!' : '';
+  document.getElementById('st-wo').textContent  = wos;
+  document.getElementById('st-le').textContent  = lonly;
+  document.getElementById('st-in').textContent  = inst.length;
+  document.getElementById('st-ea').textContent  = '$' + earned.toLocaleString();
+  document.getElementById('comm').value = settings.commission;
+}
+
+// ── OVERVIEW TAB ──
+function renderOverview() {
+  const inst     = leads.filter(l => l.status === 'Installed');
+  const earned   = inst.length * settings.commission;
+  const sched    = leads.filter(l => ['Scheduled','Rescheduled'].includes(l.status));
+  const signed   = leads.filter(l => l.status === 'Signed' && !isWorkOrder(l));
+  const today    = leads.filter(l => l.installDate && daysFrom(l.installDate) === 0);
+  const thisWeek = leads.filter(l => l.installDate && daysFrom(l.installDate) > 0 && daysFrom(l.installDate) <= 7);
+
+  // Leads without install dates, sorted by how long they've been sitting (oldest first)
+  const noDate = leads
+    .filter(l => !isWorkOrder(l) && ['Signed','Pitched'].includes(l.status))
+    .sort((a,b) => (daysSince(b.signedDate)||0) - (daysSince(a.signedDate)||0))
+    .slice(0, 8);
+
+  let html = `<div class="ov-grid">
+    <div class="ov-card highlight">
+      <div class="ov-label">Money earned</div>
+      <div class="ov-val">$${earned.toLocaleString()}</div>
+      <div class="ov-sub">${inst.length} install${inst.length!==1?'s':''} completed</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-label">Scheduled</div>
+      <div class="ov-val">${sched.length}</div>
+      <div class="ov-sub">active work orders</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-label">Signed, no date</div>
+      <div class="ov-val" style="${signed.length>0?'color:var(--gold)':''}">${signed.length}</div>
+      <div class="ov-sub">need install date</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-label">Total leads</div>
+      <div class="ov-val">${leads.length}</div>
+      <div class="ov-sub">in your CRM</div>
+    </div>
+  </div>`;
+
+  // Today
+  if (today.length) {
+    html += `<div class="sec-hdr"><span class="sec-title" style="color:var(--gold)">Today's Installs</span><span class="sec-count">${today.length}</span></div>`;
+    today.forEach(l => {
+      html += `<div class="today-item">
+        <div class="ti-left">
+          <div class="ti-name">${l.name||'Unknown'}${l.fgId?'<span class="fgtag">FG</span>':''}</div>
+          <div class="ti-addr">${l.address||'—'}</div>
+        </div>
+        <div class="ti-right">
+          <div class="ti-ph">${l.phone||'—'}</div>
+          <div class="ti-st">${badge(l.status)}</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // This week
+  if (thisWeek.length) {
+    html += `<div class="sec-hdr" style="margin-top:${today.length?'16px':'0'}"><span class="sec-title">This Week</span><span class="sec-count">${thisWeek.length} installs</span></div>`;
+    html += buildWOTable(thisWeek.sort((a,b)=>new Date(a.installDate)-new Date(b.installDate)));
+  }
+
+  // Needs attention
+  if (noDate.length) {
+    html += `<div class="sec-hdr" style="margin-top:20px">
+      <span class="sec-title">Needs Attention</span>
+      <span class="sec-count">${noDate.length} leads with no install date</span>
+      <span class="sec-note">oldest first →</span>
+    </div>`;
+    html += buildLeadsTable(noDate);
+  }
+
+  if (!leads.length) html += `<div class="empty" style="padding:60px 0">
+    <div style="font-size:15px;font-weight:500;margin-bottom:8px">Your CRM is empty</div>
+    <div style="color:var(--muted);font-size:12px">Connect FastGem to sync your leads, or import a CSV to get started.</div>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── WORK ORDERS TAB ──
+function renderWorkOrders() {
+  const wos = leads.filter(isWorkOrder)
+    .sort((a,b) => {
+      const da = daysFrom(a.installDate), db = daysFrom(b.installDate);
+      if (a.status === 'Installed' && b.status !== 'Installed') return 1;
+      if (b.status === 'Installed' && a.status !== 'Installed') return -1;
+      return (da??999) - (db??999);
+    });
+
+  const active   = wos.filter(l => l.status !== 'Installed' && l.status !== 'Cancelled');
+  const done     = wos.filter(l => l.status === 'Installed');
+  const canceled = wos.filter(l => l.status === 'Cancelled');
+
+  let html = '';
+  if (active.length) {
+    html += `<div class="sec-hdr"><span class="sec-title">Active</span><span class="sec-count">${active.length}</span></div>`;
+    html += buildWOTable(active);
+  }
+  if (done.length) {
+    html += `<div class="sec-hdr" style="margin-top:20px"><span class="sec-title">Installed ✓</span><span class="sec-count">${done.length}</span></div>`;
+    html += buildWOTable(done);
+  }
+  if (canceled.length) {
+    html += `<div class="sec-hdr" style="margin-top:20px"><span class="sec-title">Cancelled</span><span class="sec-count">${canceled.length}</span></div>`;
+    html += buildWOTable(canceled);
+  }
+  if (!wos.length) html += `<div class="empty">No work orders yet.<br>Leads with an install date will appear here.</div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── LEADS TAB ──
+function renderLeads() {
+  // Leads = no install date, not installed/cancelled
+  const active   = leads.filter(l => !isWorkOrder(l) && !['Cancelled','Lost'].includes(l.status))
+    .sort((a,b) => (daysSince(b.signedDate)||0) - (daysSince(a.signedDate)||0));
+  const inactive = leads.filter(l => !isWorkOrder(l) && ['Cancelled','Lost'].includes(l.status))
+    .sort((a,b) => (daysSince(b.signedDate)||0) - (daysSince(a.signedDate)||0));
+
+  let html = '';
+  if (active.length) {
+    html += `<div class="sec-hdr">
+      <span class="sec-title">Active Leads</span>
+      <span class="sec-count">${active.length}</span>
+      <span class="sec-note" style="color:var(--gold)">These have no install date — follow up</span>
+    </div>`;
+    html += buildLeadsTable(active);
+  }
+  if (inactive.length) {
+    html += `<div class="sec-hdr" style="margin-top:20px"><span class="sec-title">Cancelled / Lost</span><span class="sec-count">${inactive.length}</span></div>`;
+    html += buildLeadsTable(inactive);
+  }
+  if (!leads.filter(l=>!isWorkOrder(l)).length) html += `<div class="empty">No leads without an install date.<br>New leads from FastGem will show here.</div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── TABLE BUILDERS ──
+// Work Orders: NAME | PHONE | INSTALL DATE | STATUS | DAYS
+function buildWOTable(rows) {
+  const header = `<div class="tbl-header" style="grid-template-columns:1fr 130px 105px 120px 55px">
+    <span>Name</span><span>Phone</span><span>Install Date</span><span>Status</span><span style="text-align:right">Days</span>
+  </div>`;
+  const items = rows.map(l => {
+    const d  = daysFrom(l.installDate);
+    const cls = d === 0 ? ' today' : d !== null && d < 0 && l.status !== 'Installed' ? ' overdue' : '';
+    const dayStr = l.status === 'Installed' ? '<span style="color:var(--green)">✓</span>'
+      : d === 0 ? '<span style="color:var(--gold);font-weight:600">TODAY</span>'
+      : d === 1 ? '<span style="color:var(--gold)">Tomorrow</span>'
+      : d !== null && d < 0 ? `<span style="color:var(--red)">${Math.abs(d)}d ago</span>`
+      : d !== null ? `in ${d}d` : '—';
+    return `<div class="tbl-row${cls}" data-id="${l.id}" style="grid-template-columns:1fr 130px 105px 120px 55px">
+      <span class="col-name">${l.name||'Unknown'}${l.fgId?'<span class="fgtag">FG</span>':''}</span>
+      <span class="col-phone">${l.phone||'—'}</span>
+      <span class="col-date">${fmtDate(l.installDate)}</span>
+      <span>${badge(l.status)}</span>
+      <span class="col-extra">${dayStr}</span>
+    </div>`;
+  }).join('');
+  return header + items;
+}
+
+// Leads: NAME | PHONE | SIGNED DATE | STATUS | SITTING
+function buildLeadsTable(rows) {
+  const header = `<div class="tbl-header" style="grid-template-columns:1fr 130px 95px 120px 70px">
+    <span>Name</span><span>Phone</span><span>Signed</span><span>Status</span><span style="text-align:right">Sitting</span>
+  </div>`;
+  const items = rows.map(l => {
+    const ds = daysSince(l.signedDate);
+    const sitColor = ds === null ? 'var(--muted)' : ds > 14 ? 'var(--red)' : ds > 7 ? 'var(--gold)' : 'var(--dim)';
+    const sitStr = ds === null ? '—' : ds === 0 ? 'Today' : `${ds}d`;
+    return `<div class="tbl-row" data-id="${l.id}" style="grid-template-columns:1fr 130px 95px 120px 70px">
+      <span class="col-name">${l.name||'Unknown'}${l.fgId?'<span class="fgtag">FG</span>':''}</span>
+      <span class="col-phone">${l.phone||'—'}</span>
+      <span class="col-date">${fmtDate(l.signedDate)}</span>
+      <span>${badge(l.status)}</span>
+      <span class="col-extra" style="color:${sitColor};font-weight:${ds>14?600:400}">${sitStr}</span>
+    </div>`;
+  }).join('');
+  return header + items;
+}
+
+function render() {
+  updateSidebar();
+  if (activeTab === 'overview')    renderOverview();
+  else if (activeTab === 'workorders') renderWorkOrders();
+  else if (activeTab === 'leads')  renderLeads();
+}
+
+// ── DETAIL MODAL ──
+function openDetail(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  detailId = id;
+  document.getElementById('d-name').textContent = l.name || 'Unknown';
+  document.getElementById('d-addr').textContent = l.address || '—';
+  const d   = daysFrom(l.installDate);
+  const ds  = daysSince(l.signedDate);
+  const sit = ds !== null ? (ds === 0 ? 'Today' : `${ds} day${ds!==1?'s':''} ago`) : '—';
+  const rel = d===0?' · Today':d===1?' · Tomorrow':d!==null&&d>0?` · in ${d}d`:d!==null&&d<0?` · ${Math.abs(d)}d ago`:'';
+
+  const rows = [
+    ['Phone',       l.phone ? `<a href="tel:${l.phone}" style="color:var(--gold)">${l.phone}</a>` : null],
+    ['Status',      badge(l.status)],
+    ['Install date',l.installDate ? `<strong>${fmtDate(l.installDate)}</strong><span style="color:var(--muted);font-size:11px">${rel}</span>` : null],
+    ['Signed',      l.signedDate ? `${fmtDate(l.signedDate)} <span style="color:var(--muted);font-size:11px">(${sit})</span>` : null],
+    ['Email',       l.email || null],
+    ['FastGem ID',  l.contractId ? `<span style="font-family:monospace;font-size:11px">${l.contractId}</span>` : null],
+    ['FG Status',   l.fgStatus || null],
+  ].filter(r => r[1]);
+
+  let body = rows.map(([k,v]) => `<div class="dp-row"><span class="dp-k">${k}</span><span>${v}</span></div>`).join('');
+  if (l.notes) body += `<div class="dp-note">${l.notes}</div>`;
+  if (l.followUp) body += `<div class="dp-fup">⚑ Follow-up flagged</div>`;
+  document.getElementById('d-body').innerHTML = body;
+  document.getElementById('ov-detail').classList.add('open');
+}
+
+// ── ADD / EDIT ──
+function openAdd(id = null) {
+  editId = id;
+  const l = id ? leads.find(x => x.id === id) : null;
+  document.getElementById('add-t').textContent     = l ? 'Edit Lead' : 'New Lead';
+  document.getElementById('f-name').value          = l?.name || '';
+  document.getElementById('f-addr').value          = l?.address || '';
+  document.getElementById('f-phone').value         = l?.phone || '';
+  document.getElementById('f-email').value         = l?.email || '';
+  document.getElementById('f-cid').value           = l?.contractId || '';
+  document.getElementById('f-status').value        = l?.status || 'Pitched';
+  document.getElementById('f-signed').value        = l?.signedDate || '';
+  document.getElementById('f-install').value       = l?.installDate || '';
+  document.getElementById('f-notes').value         = l?.notes || '';
+  document.getElementById('f-fu').checked          = l?.followUp || false;
+  document.getElementById('ov-add').classList.add('open');
+}
+
+function saveLead() {
+  const data = {
+    name:        document.getElementById('f-name').value.trim(),
+    address:     document.getElementById('f-addr').value.trim(),
+    phone:       document.getElementById('f-phone').value.trim(),
+    email:       document.getElementById('f-email').value.trim(),
+    contractId:  document.getElementById('f-cid').value.trim(),
+    status:      document.getElementById('f-status').value,
+    signedDate:  document.getElementById('f-signed').value,
+    installDate: document.getElementById('f-install').value,
+    notes:       document.getElementById('f-notes').value.trim(),
+    followUp:    document.getElementById('f-fu').checked,
+  };
+  if (editId) { leads = leads.map(l => l.id === editId ? { ...l, ...data } : l); }
+  else { leads.unshift({ ...data, id: uid(), createdAt: new Date().toISOString() }); }
+  save(); render();
+  document.getElementById('ov-add').classList.remove('open');
+  editId = null;
+}
+
+// ── CSV IMPORT ──
+function parseCSV() {
+  const raw = document.getElementById('csv-ta').value.trim();
+  document.getElementById('csv-err').style.display = 'none';
+  if (!raw) { showCSVErr('Paste your CSV first'); return; }
+  const lines = raw.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showCSVErr('Need header + at least one row'); return; }
+  const hdrs = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+  const ci = keys => { for(const k of keys){ const i=hdrs.findIndex(h=>h.includes(k)); if(i>=0)return i; } return -1; };
+  const ni=ci(['name','customer','first']), ai=ci(['address','street']),
+        pi=ci(['phone','mobile','cell']),   ei=ci(['email']),
+        sti=ci(['status']),                 ii=ci(['install']),
+        sdi=ci(['signed','created','sale']),nti=ci(['note','comment']);
+  const rows = lines.slice(1).map(line => {
+    const cols=[]; let cur='', inQ=false;
+    for(const ch of line+','){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
+    const g = i => i>=0 ? (cols[i]||'').trim().replace(/^"|"$/g,'') : '';
+    return { name:g(ni), address:g(ai), phone:g(pi), email:g(ei),
+             status:mapStatus(g(sti)), installDate:g(ii), signedDate:g(sdi),
+             notes:g(nti), followUp:false, contractId:'' };
+  }).filter(r => r.name||r.address||r.phone);
+  if (!rows.length) { showCSVErr('No valid rows found'); return; }
+  csvPrev = rows;
+  document.getElementById('prev-ct').innerHTML = `<strong style="color:var(--text)">${rows.length}</strong> leads found`;
+  document.getElementById('prev-list').innerHTML = rows.slice(0,6).map(r =>
+    `<div class="prev-item"><div><div style="font-size:13px;font-weight:500">${r.name||'—'}</div><div style="font-size:11px;color:var(--muted)">${r.address||'—'}</div></div>${badge(r.status)}</div>`
+  ).join('') + (rows.length>6?`<div style="font-size:11px;color:var(--muted);text-align:center;padding:5px">+${rows.length-6} more</div>`:'');
+  document.getElementById('csv-body').style.display = 'none';
+  document.getElementById('csv-prev').style.display = 'block';
+}
+const showCSVErr = m => { const e=document.getElementById('csv-err'); e.textContent=m; e.style.display='block'; };
+
+function doImport() {
+  leads = [...csvPrev.map(r => ({...r, id:uid(), createdAt:new Date().toISOString()})), ...leads];
+  save(); render();
+  document.getElementById('ov-csv').classList.remove('open');
+  document.getElementById('csv-ta').value = '';
+  document.getElementById('csv-body').style.display = 'block';
+  document.getElementById('csv-prev').style.display = 'none';
+  csvPrev = [];
+}
+
+// ── EVENTS ──
+document.addEventListener('click', e => {
+  // tabs
+  if (e.target.classList.contains('tab')) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    e.target.classList.add('active');
+    activeTab = e.target.dataset.tab; render(); return;
+  }
+  // row click
+  if (e.target.closest('.tbl-row')) { openDetail(e.target.closest('.tbl-row').dataset.id); return; }
+  if (e.target.closest('.today-item[data-id]')) { openDetail(e.target.closest('[data-id]').dataset.id); return; }
+  if (e.target.closest('.attention-item')) { openDetail(e.target.closest('.attention-item').dataset.id); return; }
+  // close
+  if (e.target.dataset.close)              { document.getElementById(e.target.dataset.close).classList.remove('open'); return; }
+  if (e.target.classList.contains('overlay')) { e.target.classList.remove('open'); return; }
+  const id = e.target.id;
+  if (id==='btn-add')     { openAdd(); return; }
+  if (id==='btn-csv')     { document.getElementById('ov-csv').classList.add('open'); return; }
+  if (id==='btn-save')    { saveLead(); return; }
+  if (id==='btn-edit')    { document.getElementById('ov-detail').classList.remove('open'); openAdd(detailId); return; }
+  if (id==='btn-del')     { if(confirm('Delete this lead?')){ leads=leads.filter(l=>l.id!==detailId); save(); render(); document.getElementById('ov-detail').classList.remove('open'); } return; }
+  if (id==='btn-parse')   { parseCSV(); return; }
+  if (id==='btn-csvback') { document.getElementById('csv-body').style.display='block'; document.getElementById('csv-prev').style.display='none'; return; }
+  if (id==='btn-import')  { doImport(); return; }
+  if (id==='btn-connect') { connectFG(); return; }
+  if (id==='btn-sync')    { syncFG(); return; }
+  if (id==='btn-disc')    { if(confirm('Disconnect? Your leads stay.')) disconnectFG(); return; }
+});
+
+document.getElementById('comm').addEventListener('change', e => {
+  settings.commission = Math.max(0, +e.target.value); save(); updateSidebar();
+});
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));
+});
+
+// ── BOOT ──
+if (fgAuth) showConnected();
+render();
+</script>
+</body>
+</html>
